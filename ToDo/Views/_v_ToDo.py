@@ -36,7 +36,7 @@ def _v_todo_api_update(todo_id):
     if request.method == "POST":
         username = request.authorization["username"]
         if todo_id:
-            to_return = _m_ToDo().update_todo(todo_id=todo_id, content=request.json)
+            to_return = _m_ToDo(username=username).update_todo(todo_id=todo_id, content=request.json)
             return jsonify(to_return)
         else:
             abort(400, "No valid todo specied!")

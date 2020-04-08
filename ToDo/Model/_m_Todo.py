@@ -70,7 +70,8 @@ class _m_ToDo:
         updated_todo = {
             "id": todo_id,
             "created_at": old_todo["created_at"],
-            "updated_at": self.dtnow
+            "updated_at": self.dtnow,
+            "username": self.username
         }
 
         try:
