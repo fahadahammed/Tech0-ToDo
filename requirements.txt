@@ -1,0 +1,16 @@
+flask
+passlib
+mysqlclient
+Flask_Caching
+Flask-Limiter
+gunicorn
+requests
+redis
+setproctitle
+python-dateutil
+skpy
+pika
+pymongo
+apscheduler
+uwsgi
+flask_httpauth

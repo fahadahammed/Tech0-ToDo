@@ -1,0 +1,238 @@
+{% include "Head.html" %}
+{#{% include "Navigation.html" %}#}
+
+<style>
+
+    a#title {
+        color: #4b1871a1;
+    }
+
+    a#title:hover {
+        color: rgba(75, 24, 113, 0.76);
+        text-decoration: none;
+    }
+
+    .todo-item {
+        background-color: #d6c3d6a1;
+        padding: 0 0 0 1%;
+        border-radius: 3px;
+        border-bottom: double;
+        border-bottom-color: white;
+    }
+
+    .todo-item:hover {
+        background-color: rgba(129, 69, 165, 0.39);
+    }
+
+    .todo-item-only-todo {
+        padding: 1%;
+    }
+
+    .completed {
+        text-decoration: line-through;
+        color: #929292;
+        font-style: oblique;
+        background-color: #a9a9a9;
+    }
+
+    .completed:hover {
+        background-color: #9e9e9e;
+    }
+
+    .sub-todo {
+        color: rgba(0, 0, 0, 0.35);
+        font-size: small;
+    }
+
+    .sub-todo-btns {
+        color: rgba(0, 0, 0, 0.7);
+        font-size: large;
+        margin: 2%;
+    }
+
+    button#inputButton {
+        background-color: #4b1871a1;
+        border: none;
+        font-weight: 500;
+    }
+
+    button#inputButton:hover {
+        background-color: rgba(75, 24, 113, 0.76);
+        border: none;
+        font-weight: bolder;
+    }
+
+</style>
+
+
+<div class="jumbotron">
+    <div class="d-flex justify-content-center"><h1><a id="title" href="/">todo_</a></h1></div>
+    <hr>
+
+    <div class="form-group row">
+        <div class="col-sm-10">
+            <input id="inputTodo" class="form-control form-control-lg" type="text"
+                   placeholder="What needs to be done?">
+        </div>
+        <label for="inputTodo" class="col-sm-2 col-form-label">
+            <button id="inputButton" onclick="SubmitToDo()" type="button" class="btn btn-sm btn-success">Insert</button>
+        </label>
+    </div>
+
+    <hr>
+
+    <div id="todos">
+
+    </div>
+
+
+
+
+
+</div>
+
+
+<script>
+
+    $(document).ready(function () {
+        return GetToDos();
+    });
+
+    let inputTodo = document.getElementById("inputTodo");
+    inputTodo.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {  //checks whether the pressed key is "Enter"
+            SubmitToDo();
+        }
+    });
+
+    function SubmitToDo() {
+        let todo = $("#inputTodo").val();
+        $("#inputTodo").val("");
+        let todo_to_post = {
+            "todo": todo
+        };
+        ExecuteRequest("Decorate", "POST", "todo", todo_to_post);
+        setTimeout(GetToDos, 2000);
+        {#GetToDos();#}
+    }
+
+    function GetToDos() {
+        $("#todos").empty();
+        ExecuteRequest("Decorate", "GET", "todo");
+    }
+
+    function ExecuteRequest(function_name = null, method, api_endpoint, data_to_post = null) {
+
+        let windowURL = $(location).attr("href").split("/");
+        let base_url = windowURL[0] + "//" + windowURL[2];
+        let api_url = base_url + "/api/" + api_endpoint;
+        let settings = {
+            "async": true,
+            "crossDomain": true,
+            "url": api_url,
+            "method": method,
+            "headers": {
+                "Content-Type": "application/json",
+                "cache-control": "no-cache"
+            },
+            "processData": false,
+            error: function (response) {
+                console.log(response, "Caught response on error !");
+                if (response["statusText"] === "error" || response["statusText"] === "BAD REQUEST" || response["status"] === 400 || response["status"] === 500 || response["status"] === 429) {
+                    setTimeout(function () {
+                        console.log("Retry Request when ERROR !");
+                        final_execution();
+                    }, 10000);
+                }
+            },
+            success: function (response) {
+                console.log(response, typeof (response), "Caught response on success !");
+                if (function_name === "Decorate") {
+                    //$("#todos").empty();
+                    for (let _index = 0; _index < response.length; _index++) {
+                        Decorate(response[_index]);
+                    }
+                }
+            }
+        };
+
+        if (method === "POST") {
+            settings["data"] = JSON.stringify(data_to_post);
+        }
+
+        let final_execution = function () {
+            $.ajax(settings).done(function (response) {
+                console.log("Executing...");
+            });
+        };
+
+        // EXECUTE
+        final_execution();
+    }
+
+    function Decorate(todo_items) {
+
+        let InputCheckBox = '<input id="input-id-' + todo_items["id"] + '" class="toggle" type="checkbox"'
+            +
+            ' onclick="CheckCompleted(\'' + todo_items["id"] + '\')"'
+            +
+            '>';
+
+        let html_var = '<div id="'
+            + todo_items["id"] + '" class="todo-item">'
+            + InputCheckBox
+            + '<strong class="todo-item-only-todo" id="todo-' + todo_items["id"] + '">' + todo_items["todo"]
+            + '</strong>';
+
+        let other_info = '<div class="row">'
+            + '<div class="col-9"><i class="sub-todo">Updated At: ' + todo_items["updated_at"] + "</i></div>"
+            + '<div class="col-3">'
+            + '<div class="d-flex justify-content-end">'
+            + '<button type="button" class="btn btn-sm btn-light sub-todo-btns">&#9998;</button>'
+            + '<button type="button" class="btn btn-sm btn-light sub-todo-btns" onclick="DeactivateToDo(\''+ todo_items["id"] +'\')">&#10008;</button>'
+            + '</div>'
+            + '</div>'
+            + '</div>';
+
+        $("#todos").prepend(html_var + other_info);
+
+        if (todo_items["completed"]) {
+            $("#" + todo_items["id"]).addClass("completed");
+            $("#input-id-" + todo_items["id"]).click();
+        } else {
+            $("#" + todo_items["id"]).addClass("not-completed");
+        }
+        console.log("DECORATE_h", html_var);
+    }
+
+    function CheckCompleted(todoid) {
+
+        // Get the checkbox
+        let checkBox = document.getElementById("input-id-" + todoid);
+
+        // If the checkbox is checked, display the output text
+        if (checkBox.checked === true) {
+            console.log("CLICKED", todoid);
+            $("#" + todoid).removeClass("not-completed");
+            $("#" + todoid).addClass("completed");
+            ExecuteRequest(function_name = null, method = "POST", api_endpoint = "todo/" + todoid, data_to_post = {
+                "completed": true
+            });
+        } else {
+            console.log("UNCLICKED", todoid);
+            $("#" + todoid).removeClass("completed");
+            $("#" + todoid).addClass("not-completed");
+            ExecuteRequest(function_name = null, method = "POST", api_endpoint = "todo/" + todoid, data_to_post = {
+                "completed": false
+            });
+        }
+    }
+
+    function DeactivateToDo(todoid) {
+        ExecuteRequest(function_name=null, "DELETE", api_endpoint="todo/deactivate/"+todoid, data_to_post=null);
+        setTimeout(GetToDos, 2000);
+    }
+
+</script>
+
+{% include "Foot.html" %}
