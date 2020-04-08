@@ -17,4 +17,4 @@ The main purpose of this project is to manage your todo.
 
 ---
 
-Powered By: [Tech0.XYZ](tech0.xyz)
+Powered By: [Tech0.XYZ](https://tech0.xyz)
