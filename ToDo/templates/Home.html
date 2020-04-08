@@ -26,6 +26,7 @@
 
     .todo-item-only-todo {
         padding: 1%;
+        font-size: x-large;
     }
 
     .completed {
@@ -66,10 +67,10 @@
 
 
 <div class="jumbotron">
-    <div class="d-flex justify-content-center"><h1><a id="title" href="/">todo_</a></h1></div>
+    <div class="d-flex justify-content-center"><h1><a id="title" href="/">{{ username.capitalize() }}'s todo_</a></h1></div>
     <hr>
 
-    <div class="form-group row">
+    <div id="store" class="form-group row">
         <div class="col-sm-10">
             <input id="inputTodo" class="form-control form-control-lg" type="text"
                    placeholder="What needs to be done?">
@@ -79,14 +80,20 @@
         </label>
     </div>
 
+    <div id="edit" class="form-group row">
+        <div class="col-sm-10">
+            <input id="editTodo" class="form-control form-control-lg" type="text"
+                   placeholder="What needs to be done?">
+        </div>
+        <label for="editTodo" class="col-sm-2 col-form-label">
+            <button id="editButton" type="button" class="btn btn-sm btn-success">Save</button>
+        </label>
+    </div>
     <hr>
 
     <div id="todos">
 
     </div>
-
-
-
 
 
 </div>
@@ -95,13 +102,21 @@
 <script>
 
     $(document).ready(function () {
-        return GetToDos();
+        $("#edit").hide();
+        GetToDos();
     });
 
     let inputTodo = document.getElementById("inputTodo");
     inputTodo.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {  //checks whether the pressed key is "Enter"
             SubmitToDo();
+        }
+    });
+    let editTodo = document.getElementById("editTodo");
+    editTodo.addEventListener("keydown", function (e) {
+        if (e.key === "Enter") {  //checks whether the pressed key is "Enter"
+            let todoid = $("#editButton").attr('onclick').split("'")[1];
+            EditToDo(todoid=todoid);
         }
     });
 
@@ -114,6 +129,27 @@
         ExecuteRequest("Decorate", "POST", "todo", todo_to_post);
         setTimeout(GetToDos, 2000);
         {#GetToDos();#}
+    }
+
+    function EditToDo(todoid) {
+        let todo = $("#editTodo").val();
+        console.log("ETD", todoid, todo);
+        $("#todos").empty();
+        let todo_to_post = {
+            "todo": todo
+        };
+        ExecuteRequest("Decorate", "POST", "todo/" + todoid, todo_to_post);
+        setTimeout(GetToDos, 2000);
+        $("#store").show(1000);
+        $("#edit").hide(1000);
+    }
+
+    function EditToDoClick(todoid, todo) {
+        console.log("ETDC", todoid, todo);
+        $("#store").hide(1000);
+        $("#editTodo").val(todo);
+        $('#editButton').attr('onclick', 'EditToDo(\'' + todoid + '\')');
+        $("#edit").show(1000);
     }
 
     function GetToDos() {
@@ -148,7 +184,6 @@
             success: function (response) {
                 console.log(response, typeof (response), "Caught response on success !");
                 if (function_name === "Decorate") {
-                    //$("#todos").empty();
                     for (let _index = 0; _index < response.length; _index++) {
                         Decorate(response[_index]);
                     }
@@ -181,15 +216,18 @@
         let html_var = '<div id="'
             + todo_items["id"] + '" class="todo-item">'
             + InputCheckBox
-            + '<strong class="todo-item-only-todo" id="todo-' + todo_items["id"] + '">' + todo_items["todo"]
+            + '<strong '
+            + 'onclick="CheckCompletedT(\'' + todo_items["id"] + '\')"'
+            + 'class="todo-item-only-todo" id="todo-' + todo_items["id"]
+            + '">' + todo_items["todo"]
             + '</strong>';
 
         let other_info = '<div class="row">'
             + '<div class="col-9"><i class="sub-todo">Updated At: ' + todo_items["updated_at"] + "</i></div>"
             + '<div class="col-3">'
             + '<div class="d-flex justify-content-end">'
-            + '<button type="button" class="btn btn-sm btn-light sub-todo-btns">&#9998;</button>'
-            + '<button type="button" class="btn btn-sm btn-light sub-todo-btns" onclick="DeactivateToDo(\''+ todo_items["id"] +'\')">&#10008;</button>'
+            + '<button type="button" class="btn btn-sm btn-light sub-todo-btns" onclick="EditToDoClick(\'' + todo_items["id"] + '\',\'' + todo_items["todo"] + '\')">&#9998;</button>'
+            + '<button type="button" class="btn btn-sm btn-light sub-todo-btns" onclick="DeactivateToDo(\'' + todo_items["id"] + '\')">&#10008;</button>'
             + '</div>'
             + '</div>'
             + '</div>';
@@ -203,6 +241,20 @@
             $("#" + todo_items["id"]).addClass("not-completed");
         }
         console.log("DECORATE_h", html_var);
+    }
+
+    function CheckCompletedT(todoid) {
+
+        // Get the checkbox
+        let checkBox = document.getElementById("input-id-" + todoid);
+        console.log("CClT-", checkBox, checkBox.checked);
+        if (checkBox.checked === true) {
+            checkBox.checked = false;
+        } else {
+            checkBox.checked = true;
+        }
+        console.log("CClT+", checkBox, checkBox.checked);
+        CheckCompleted(todoid=todoid);
     }
 
     function CheckCompleted(todoid) {
@@ -229,7 +281,7 @@
     }
 
     function DeactivateToDo(todoid) {
-        ExecuteRequest(function_name=null, "DELETE", api_endpoint="todo/deactivate/"+todoid, data_to_post=null);
+        ExecuteRequest(function_name = null, "DELETE", api_endpoint = "todo/deactivate/" + todoid, data_to_post = null);
         setTimeout(GetToDos, 2000);
     }
 
