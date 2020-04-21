@@ -55,7 +55,19 @@ class _m_ToDo:
             # return [x for x in all_todos if x["active"] is True or x["active"] is None]
             # return [x for x in all_todos][::-1]
             print("AT", all_todos)
-            return sorted(all_todos, key=lambda i: i['created_at'])
+
+            com = []
+            ncom = []
+            for i in all_todos:
+                if i["completed"]:
+                    com.append(i)
+                else:
+                    ncom.append(i)
+
+            final_todos = sorted(com, key=lambda i:i["updated_at"]) + sorted(ncom, key=lambda i:i["updated_at"])
+
+            # return sorted(all_todos, key=lambda i: i['created_at'])
+            return final_todos
         else:
             return False
 

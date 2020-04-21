@@ -254,10 +254,11 @@
             checkBox.checked = true;
         }
         console.log("CClT+", checkBox, checkBox.checked);
-        CheckCompleted(todoid=todoid);
+        CheckCompleted(todoid = todoid);
     }
 
     function CheckCompleted(todoid) {
+
 
         // Get the checkbox
         let checkBox = document.getElementById("input-id-" + todoid);
@@ -267,14 +268,14 @@
             console.log("CLICKED", todoid);
             $("#" + todoid).removeClass("not-completed");
             $("#" + todoid).addClass("completed");
-            ExecuteRequest(function_name = null, method = "POST", api_endpoint = "todo/" + todoid, data_to_post = {
+            ExecuteRequest(function_name = "UNCLICKED", method = "POST", api_endpoint = "todo/" + todoid, data_to_post = {
                 "completed": true
             });
         } else {
             console.log("UNCLICKED", todoid);
             $("#" + todoid).removeClass("completed");
             $("#" + todoid).addClass("not-completed");
-            ExecuteRequest(function_name = null, method = "POST", api_endpoint = "todo/" + todoid, data_to_post = {
+            ExecuteRequest(function_name = "UNCLICKED", method = "POST", api_endpoint = "todo/" + todoid, data_to_post = {
                 "completed": false
             });
         }
